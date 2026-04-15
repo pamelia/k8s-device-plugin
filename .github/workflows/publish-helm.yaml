@@ -22,6 +22,7 @@ on:
 
 jobs:
   update-helm-charts:
+    if: vars.ENABLE_RELEASE_AUTOMATION == 'true'
     name: Update gh-pages branch helm charts and index
     runs-on: ubuntu-latest
     env:
@@ -50,10 +51,12 @@ jobs:
         git -C $HELM_REPO_PATH push https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} gh-pages
 
   publish-helm-repo:
+    if: vars.ENABLE_RELEASE_AUTOMATION == 'true'
     uses: ./.github/workflows/deploy-to-pages.yaml
     secrets: inherit
 
   check-helm-repo:
+    if: vars.ENABLE_RELEASE_AUTOMATION == 'true'
     name: Checks for updated Helm repo
     runs-on: ubuntu-latest
     steps:

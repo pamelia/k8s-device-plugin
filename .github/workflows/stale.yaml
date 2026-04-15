@@ -6,6 +6,7 @@ on:
 
 jobs:
   stale:
+    if: vars.ENABLE_STALE_AUTOMATION == 'true'
     permissions:
       actions: write
       issues: write

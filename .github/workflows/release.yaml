@@ -22,6 +22,7 @@ on:
 
 jobs:
   release:
+    if: vars.ENABLE_RELEASE_AUTOMATION == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

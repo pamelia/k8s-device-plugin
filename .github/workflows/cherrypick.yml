@@ -31,6 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     # Run on /cherry-pick comments on PRs
     if: |
+      vars.ENABLE_CHERRYPICK_AUTOMATION == 'true' &&
       github.event_name == 'issue_comment' &&
       github.event.issue.pull_request && 
       startsWith(github.event.comment.body, '/cherry-pick')
@@ -59,6 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     # Run when PR is merged and has cherry-pick labels
     if: |
+      vars.ENABLE_CHERRYPICK_AUTOMATION == 'true' &&
       github.event_name == 'pull_request_target' &&
       github.event.pull_request.merged == true &&
       contains(join(github.event.pull_request.labels.*.name, ','), 'cherry-pick/')
