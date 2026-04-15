@@ -107,6 +107,10 @@ runtimeClassName: null
 
 devicePlugin:
   enabled: true
+  # enableHostNetwork when set to true runs the pod with hostNetwork: true.
+  # This can be useful in non-overlay network environments (e.g., AWS, Azure, GCP)
+  # to avoid unnecessary IP allocation for daemon pods.
+  # enableHostNetwork: false
 
 gfd:
   enabled: false
@@ -119,6 +123,10 @@ gfd:
     # vgpu info on a host.
     # TODO: This should be optional and detected automatically.
     privileged: true
+  # enableHostNetwork when set to true runs the pod with hostNetwork: true.
+  # This can be useful in non-overlay network environments (e.g., AWS, Azure, GCP)
+  # to avoid unnecessary IP allocation for daemon pods.
+  # enableHostNetwork: false
 
 # Helm dependency
 nfd:
@@ -161,6 +169,10 @@ mps:
   # recommended that you enable this option.
   # NOTE: HostPID and ShareProcessNamespace cannot both be set to true
   enableHostPID: true
+  # enableHostNetwork when set to true runs the pod with hostNetwork: true.
+  # This can be useful in non-overlay network environments (e.g., AWS, Azure, GCP)
+  # to avoid unnecessary IP allocation for daemon pods.
+  # enableHostNetwork: false
 
 
 cdi:
