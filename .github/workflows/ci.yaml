@@ -35,6 +35,7 @@ jobs:
       version: ${{ needs.basic.outputs.version }}
 
   e2e-test:
+    if: github.repository == 'NVIDIA/k8s-device-plugin'
     needs:
     - image
     - basic

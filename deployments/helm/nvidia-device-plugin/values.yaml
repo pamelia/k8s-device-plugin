@@ -37,6 +37,11 @@ gdrcopyEnabled: null
 gdsEnabled: null
 mofedEnabled: null
 deviceDiscoveryStrategy: null
+resourcePrefix: null
+resourceSuffix: null
+dpDisableHealthchecks: null
+imexChannelIds: null
+imexRequired: null
 
 nameOverride: ""
 fullnameOverride: ""
@@ -47,7 +52,7 @@ allowDefaultNamespace: false
 
 imagePullSecrets: []
 image:
-  repository: nvcr.io/nvidia/k8s-device-plugin
+  repository: ghcr.io/pamelia/k8s-device-plugin
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""

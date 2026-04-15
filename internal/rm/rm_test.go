@@ -190,3 +190,29 @@ func TestValidateRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestAddDefaultResourcesToConfigUsesDefaultSuffix(t *testing.T) {
+	t.Setenv("RESOURCE_SUFFIX", "")
+
+	config := &spec.Config{
+		Flags: spec.Flags{},
+	}
+
+	err := AddDefaultResourcesToConfig(nil, nil, nil, config)
+	require.NoError(t, err)
+	require.Len(t, config.Resources.GPUs, 1)
+	require.Equal(t, spec.ResourceName("nvidia.com/gpu"), config.Resources.GPUs[0].Name)
+}
+
+func TestAddDefaultResourcesToConfigUsesEnvSuffix(t *testing.T) {
+	t.Setenv("RESOURCE_SUFFIX", "accelerator")
+
+	config := &spec.Config{
+		Flags: spec.Flags{},
+	}
+
+	err := AddDefaultResourcesToConfig(nil, nil, nil, config)
+	require.NoError(t, err)
+	require.Len(t, config.Resources.GPUs, 1)
+	require.Equal(t, spec.ResourceName("nvidia.com/accelerator"), config.Resources.GPUs[0].Name)
+}

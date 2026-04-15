@@ -155,6 +155,14 @@ spec:
               fieldRef:
                 apiVersion: v1
                 fieldPath: spec.nodeName
+        {{- if typeIs "string" .Values.resourcePrefix }}
+          - name: RESOURCE_PREFIX
+            value: {{ .Values.resourcePrefix | quote }}
+        {{- end }}
+        {{- if typeIs "string" .Values.resourceSuffix }}
+          - name: RESOURCE_SUFFIX
+            value: {{ .Values.resourceSuffix | quote }}
+        {{- end }}
         {{- if typeIs "string" .Values.migStrategy }}
           - name: MIG_STRATEGY
             value: {{ .Values.migStrategy }}

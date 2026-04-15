@@ -19,6 +19,7 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -46,8 +47,13 @@ type Resources struct {
 // NewResourceName builds a resource name from the standard prefix and a name.
 // An error is returned if the format is incorrect.
 func NewResourceName(n string) (ResourceName, error) {
-	if !strings.HasPrefix(n, ResourceNamePrefix+"/") {
-		n = ResourceNamePrefix + "/" + n
+	prefix := os.Getenv("RESOURCE_PREFIX")
+	if prefix == "" {
+		prefix = ResourceNamePrefix
+	}
+
+	if !strings.HasPrefix(n, prefix+"/") {
+		n = prefix + "/" + n
 	}
 
 	if len(n) > MaxResourceNameLength {
