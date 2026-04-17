@@ -40,11 +40,30 @@ ARG VERSION="N/A"
 ARG GIT_COMMIT="unknown"
 RUN make PREFIX=/artifacts cmds
 
-FROM nvcr.io/nvidia/distroless/go:v4.0.3-dev AS application
+# We use the ubi9-minimal image as a reference image in removing unneeded dependencies.
+FROM redhat/ubi9-minimal:latest AS minimal
 
-USER 0:0
-SHELL ["/busybox/sh", "-c"]
-RUN ln -s /busybox/sh /bin/sh
+RUN rpm -qa --queryformat='^%{NAME}-\[0-9\].*\.%{ARCH}$\n' | sort -u > /tmp/package-names.minimal
+RUN rpm -qa | sort -u > /tmp/package-list.minimal
+
+# We define the following image as a runtime base and remove unneeded packages.
+# Starting from the CUDA UBI9 base ensures the resulting image has /bin/bash,
+# which the NVIDIA GPU Operator's ClusterPolicy expects when it wraps the
+# container command as `/bin/bash -c /bin/entrypoint.sh`.
+FROM nvcr.io/nvidia/cuda:12.6.3-base-ubi9 AS runtime-base
+
+WORKDIR /cleanup
+
+COPY --from=minimal /tmp/package-names.minimal package-names.minimal
+COPY --from=minimal /tmp/package-list.minimal package-list.minimal
+COPY deployments/container/cleanup/* .
+
+RUN ./cleanup.sh
+
+WORKDIR /
+
+# Final application image.
+FROM runtime-base AS application
 
 ENV NVIDIA_DISABLE_REQUIRE="true"
 ENV NVIDIA_VISIBLE_DEVICES=all
@@ -62,7 +81,9 @@ LABEL release="N/A"
 LABEL summary="NVIDIA device plugin for Kubernetes"
 LABEL description="See summary"
 
-COPY LICENSE /licenses/
+RUN mkdir -p /licenses && \
+    if [ -f /NGC-DL-CONTAINER-LICENSE ]; then mv /NGC-DL-CONTAINER-LICENSE /licenses/NGC-DL-CONTAINER-LICENSE; fi
+COPY LICENSE /licenses/LICENSE
 
 COPY --from=build /artifacts/config-manager         /usr/bin/config-manager
 COPY --from=build /artifacts/gpu-feature-discovery  /usr/bin/gpu-feature-discovery
