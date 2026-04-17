@@ -90,4 +90,8 @@ COPY --from=build /artifacts/gpu-feature-discovery  /usr/bin/gpu-feature-discove
 COPY --from=build /artifacts/mps-control-daemon     /usr/bin/mps-control-daemon
 COPY --from=build /artifacts/nvidia-device-plugin   /usr/bin/nvidia-device-plugin
 
+# The NVIDIA GPU Operator ClusterPolicy wraps the container command as
+# `/bin/bash -c /bin/entrypoint.sh`, so we ship a thin wrapper at that path.
+COPY --chmod=0755 deployments/container/entrypoint.sh /bin/entrypoint.sh
+
 ENTRYPOINT ["nvidia-device-plugin"]
