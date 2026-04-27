@@ -469,7 +469,7 @@ func findPidToSignal(f *Flags) (int, error) {
 			klog.V(4).Infof("Skipping process %d: empty cmdline", p.PID)
 			continue
 		}
-		if cmdline[0] == f.ProcessToSignal {
+		if cmdline[0] == f.ProcessToSignal || filepath.Base(cmdline[0]) == filepath.Base(f.ProcessToSignal) {
 			return p.PID, nil
 		}
 	}
