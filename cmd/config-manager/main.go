@@ -17,7 +17,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -60,8 +59,6 @@ const (
 
 // NamedConfigFallback is the name of the config to look for when applying FallbackStrategyNamedConfig
 const NamedConfigFallback = "default"
-
-var errProcessNotFound = errors.New("no process found")
 
 // Flags holds configurable settings as set via the CLI
 type Flags struct {
@@ -338,10 +335,6 @@ func updateConfig(config string, f *Flags) error {
 		klog.Infof("Sending signal '%s' to '%s'", syscall.Signal(f.Signal), f.ProcessToSignal)
 		err := signalProcess(f)
 		if err != nil {
-			if errors.Is(err, errProcessNotFound) {
-				klog.Warningf("Unable to signal '%s': process not found; config was updated but may require process restart to take effect", f.ProcessToSignal)
-				return nil
-			}
 			return err
 		}
 		klog.Infof("Successfully sent signal")
@@ -480,7 +473,7 @@ func findPidToSignal(f *Flags) (int, error) {
 			return p.PID, nil
 		}
 	}
-	return -1, errProcessNotFound
+	return -1, fmt.Errorf("no process found")
 }
 
 func fileExists(filename string) (bool, error) {
