@@ -17,6 +17,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -28,6 +29,7 @@ import (
 	cli "github.com/urfave/cli/v2"
 
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -58,6 +60,8 @@ const (
 
 // NamedConfigFallback is the name of the config to look for when applying FallbackStrategyNamedConfig
 const NamedConfigFallback = "default"
+
+var errProcessNotFound = errors.New("no process found")
 
 // Flags holds configurable settings as set via the CLI
 type Flags struct {
@@ -238,6 +242,16 @@ func start(c *cli.Context, f *Flags) error {
 		return fmt.Errorf("error building kubernetes clientset from config: %s", err)
 	}
 
+	if f.Oneshot {
+		node, err := clientset.CoreV1().Nodes().Get(c.Context, f.NodeName, metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("error getting node %q: %v", f.NodeName, err)
+		}
+		config := node.Labels[f.NodeLabel]
+		klog.Infof("One-shot config sync using current node label: %s=%s", f.NodeLabel, config)
+		return updateConfig(config, f)
+	}
+
 	config := NewSyncableConfig(f)
 
 	stop := continuouslySyncConfigChanges(clientset, config, f)
@@ -324,6 +338,10 @@ func updateConfig(config string, f *Flags) error {
 		klog.Infof("Sending signal '%s' to '%s'", syscall.Signal(f.Signal), f.ProcessToSignal)
 		err := signalProcess(f)
 		if err != nil {
+			if errors.Is(err, errProcessNotFound) {
+				klog.Warningf("Unable to signal '%s': process not found; config was updated but may require process restart to take effect", f.ProcessToSignal)
+				return nil
+			}
 			return err
 		}
 		klog.Infof("Successfully sent signal")
@@ -451,13 +469,18 @@ func findPidToSignal(f *Flags) (int, error) {
 	for _, p := range procs {
 		cmdline, err := p.CmdLine()
 		if err != nil {
-			return -1, fmt.Errorf("error getting cmdline: %v", err)
+			klog.V(4).Infof("Skipping process %d: error getting cmdline: %v", p.PID, err)
+			continue
+		}
+		if len(cmdline) == 0 {
+			klog.V(4).Infof("Skipping process %d: empty cmdline", p.PID)
+			continue
 		}
 		if cmdline[0] == f.ProcessToSignal {
 			return p.PID, nil
 		}
 	}
-	return -1, fmt.Errorf("no process found")
+	return -1, errProcessNotFound
 }
 
 func fileExists(filename string) (bool, error) {
